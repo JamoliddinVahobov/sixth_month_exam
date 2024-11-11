@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager_app/models/task_model.dart';
 import 'package:task_manager_app/screens/task_details.dart';
 import 'package:task_manager_app/services/storage_service.dart';
-
+import '../helpers/field_widgets.dart';
 import 'tasklist.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,12 +19,138 @@ class HomeScreenState extends State<HomeScreen>
   late Map<String, List<Task>> tasks;
   final StorageService _storageService = StorageService();
   bool _isLoading = true;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController descController = TextEditingController();
+  String? _titleError;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: categories.length, vsync: this);
     _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _titleController.dispose();
+    descController.dispose();
+  }
+
+  Future<void> showAddTaskDialog(BuildContext context) async {
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
+    _titleController.clear();
+    _titleError = null;
+    descController.clear();
+
+    final result = await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            _titleController.addListener(() {
+              if (context.mounted) {
+                setDialogState(() {
+                  if (_titleController.text.trim().isNotEmpty) {
+                    _titleError = null;
+                  }
+                });
+              }
+            });
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 300,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 20, 15, 30),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Adding ${getDialogTitle(categories[_tabController.index])} Task',
+                      style: TextStyle(
+                        color: Colors.greenAccent[700],
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TaskTitleField(
+                      controller: _titleController,
+                      errorText: _titleError,
+                    ),
+                    const SizedBox(height: 10),
+                    TaskDescriptionField(
+                      controller: descController,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          child: Text('Close',
+                              style: TextStyle(color: Colors.purple[500])),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 10),
+                        TextButton(
+                          child: Text('Add',
+                              style: TextStyle(color: Colors.purple[500])),
+                          onPressed: () {
+                            if (_titleController.text.trim().isEmpty) {
+                              setDialogState(() {
+                                _titleError = "Title can't be empty";
+                              });
+                              return;
+                            }
+                            setDialogState(() {
+                              _titleError = null;
+                            });
+
+                            Navigator.pop(context, {
+                              'title': _titleController.text,
+                              'description': descController.text,
+                              'date': selectedDate,
+                              'time': selectedTime,
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      final newTask = Task(
+        id: DateTime.now().toString(),
+        title: result['title'],
+        description: result['description'],
+        dateTime: DateTime(
+          result['date'].year,
+          result['date'].month,
+          result['date'].day,
+          result['time'].hour,
+          result['time'].minute,
+        ),
+        category: categories[_tabController.index],
+      );
+
+      setState(() {
+        tasks[categories[_tabController.index]]!.add(newTask);
+      });
+      await _saveTasks();
+    }
   }
 
   Future<void> _loadTasks() async {
@@ -88,7 +214,7 @@ class HomeScreenState extends State<HomeScreen>
           shape: const CircleBorder(),
           backgroundColor: Colors.greenAccent[700],
           child: const Icon(Icons.add, color: Colors.black, size: 30),
-          onPressed: () => _showAddTaskDialog(context),
+          onPressed: () => showAddTaskDialog(context),
         ),
       ),
     );
@@ -123,167 +249,23 @@ class HomeScreenState extends State<HomeScreen>
     }
   }
 
-  void _showAddTaskDialog(BuildContext context) async {
-    final TextEditingController taskController = TextEditingController();
-    final TextEditingController descController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
-    TimeOfDay selectedTime = TimeOfDay.now();
-
-    final result = await showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 300,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 20, 15, 30),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Adding ${getDialogTitle(categories[_tabController.index])} Task',
-                style: TextStyle(
-                  color: Colors.greenAccent[700],
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                cursorColor: Colors.purple[500],
-                controller: taskController,
-                decoration: const InputDecoration(
-                  labelText: 'Task',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                cursorColor: Colors.purple[500],
-                controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    child: Text('Pick Date',
-                        style: TextStyle(color: Colors.green[500])),
-                    onPressed: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2100),
-                      );
-                      if (date != null) selectedDate = date;
-                    },
-                  ),
-                  TextButton(
-                    child: Text('Pick Time',
-                        style: TextStyle(color: Colors.green[500])),
-                    onPressed: () async {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: selectedTime,
-                      );
-                      if (time != null) selectedTime = time;
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    child: Text('Close',
-                        style: TextStyle(color: Colors.purple[500])),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 10),
-                  TextButton(
-                    child: Text('Add',
-                        style: TextStyle(color: Colors.purple[500])),
-                    onPressed: () {
-                      if (taskController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.grey[800],
-                            content: const Text(
-                              "Task can't be empty",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        );
-                      } else {
-                        Navigator.pop(context, {
-                          'title': taskController.text,
-                          'description': descController.text,
-                          'date': selectedDate,
-                          'time': selectedTime,
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (result != null) {
-      final newTask = Task(
-        id: DateTime.now().toString(),
-        title: result['title'],
-        description: result['description'],
-        dateTime: DateTime(
-          result['date'].year,
-          result['date'].month,
-          result['date'].day,
-          result['time'].hour,
-          result['time'].minute,
-        ),
-        category: categories[_tabController.index],
-      );
-
-      setState(() {
-        tasks[categories[_tabController.index]]!.add(newTask);
-      });
-      await _saveTasks();
-    }
-  }
-
   void _showTaskDetails(Task task) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TaskDetailScreen(task: task),
+        builder: (context) => TaskDetailScreen(
+          task: task,
+          onTaskUpdated: _updateTask,
+        ),
       ),
     );
+  }
+
+  void _updateTask(Task updatedTask) {
+    setState(() {
+      tasks[updatedTask.category]![tasks[updatedTask.category]!
+          .indexWhere((task) => task.id == updatedTask.id)] = updatedTask;
+    });
+    _saveTasks();
   }
 }
