@@ -1,6 +1,6 @@
-import 'package:exam_todo_app/models/task_model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:task_manager_app/models/task_model.dart';
+import '../helpers/helpers.dart';
 
 class TaskList extends StatelessWidget {
   final List<Task> tasks;
@@ -52,16 +52,8 @@ class TaskList extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: theFormattedDateTime(task.dateTime),
+                    text: Helpers.formattedDateTime(task.dateTime),
                     style: TextStyle(color: Colors.green[300], fontSize: 14),
-                  ),
-                  TextSpan(
-                    text:
-                        "  ${task.dateTime.hour}:${task.dateTime.minute.toString().padLeft(2, '0')}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
                   ),
                 ],
               ),
@@ -76,8 +68,4 @@ class TaskList extends StatelessWidget {
       },
     );
   }
-}
-
-String theFormattedDateTime(DateTime dateTime) {
-  return DateFormat('MMMM d, y').format(dateTime);
 }

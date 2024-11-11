@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:exam_todo_app/models/task_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task_manager_app/models/task_model.dart';
 
 class StorageService {
   static const String tasksKey = 'tasks';
@@ -24,8 +24,8 @@ class StorageService {
 
     if (tasksString == null) {
       return {
-        'Personal': [],
         'Default': [],
+        'Personal': [],
         'Study': [],
         'Work': [],
       };

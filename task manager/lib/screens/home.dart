@@ -1,9 +1,9 @@
-import 'package:exam_todo_app/models/task_model.dart';
-import 'package:exam_todo_app/screens/task_details.dart';
-import 'package:exam_todo_app/screens/tasklist.dart';
-import 'package:exam_todo_app/services/storage_service.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:task_manager_app/models/task_model.dart';
+import 'package:task_manager_app/screens/task_details.dart';
+import 'package:task_manager_app/services/storage_service.dart';
+
+import 'tasklist.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> categories = ['Personal', 'Default', 'Study', 'Work'];
+  final List<String> categories = ['Default', 'Personal', 'Study', 'Work'];
   late Map<String, List<Task>> tasks;
   final StorageService _storageService = StorageService();
   bool _isLoading = true;
@@ -83,11 +83,11 @@ class HomeScreenState extends State<HomeScreen>
             .toList(),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(right: 10, bottom: 5),
+        padding: const EdgeInsets.only(right: 15, bottom: 40),
         child: FloatingActionButton(
           shape: const CircleBorder(),
           backgroundColor: Colors.greenAccent[700],
-          child: const Icon(Icons.add, color: Colors.black),
+          child: const Icon(Icons.add, color: Colors.black, size: 30),
           onPressed: () => _showAddTaskDialog(context),
         ),
       ),
@@ -110,10 +110,10 @@ class HomeScreenState extends State<HomeScreen>
 
   static String getDialogTitle(String category) {
     switch (category) {
+      case 'Default':
+        return 'Default';
       case 'Personal':
         return 'Personal';
-      case 'Default':
-        return 'Todo';
       case 'Study':
         return 'Study';
       case 'Work':
@@ -145,7 +145,7 @@ class HomeScreenState extends State<HomeScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Adding ${getDialogTitle(categories[_tabController.index])} Default',
+                'Adding ${getDialogTitle(categories[_tabController.index])} Task',
                 style: TextStyle(
                   color: Colors.greenAccent[700],
                   fontSize: 20,
@@ -153,7 +153,6 @@ class HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              // Title TextField
               TextField(
                 cursorColor: Colors.purple[500],
                 controller: taskController,
@@ -230,7 +229,6 @@ class HomeScreenState extends State<HomeScreen>
                         style: TextStyle(color: Colors.purple[500])),
                     onPressed: () {
                       if (taskController.text.isEmpty) {
-                        // Show a Snackbar if the task is empty
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             backgroundColor: Colors.grey[800],
@@ -288,8 +286,4 @@ class HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-}
-
-String formattedDateTime(DateTime dateTime) {
-  return DateFormat('MMMM d, y h:mm a').format(dateTime);
 }

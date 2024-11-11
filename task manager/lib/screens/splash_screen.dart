@@ -1,6 +1,5 @@
-// lib/splash_screen.dart
 import 'package:flutter/material.dart';
-import 'package:exam_todo_app/screens/home.dart';
+import 'package:task_manager_app/screens/home.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

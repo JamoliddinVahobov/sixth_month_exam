@@ -1,6 +1,8 @@
-import 'package:exam_todo_app/models/task_model.dart';
-import 'package:exam_todo_app/screens/home.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager_app/models/task_model.dart';
+import 'package:task_manager_app/screens/home.dart';
+
+import '../helpers/helpers.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final Task task;
@@ -18,7 +20,7 @@ class TaskDetailScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: Colors.greenAccent[700]),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('$title Details',
+        title: Text('$title Task Details',
             style: TextStyle(color: Colors.greenAccent[700])),
       ),
       body: Padding(
@@ -32,7 +34,7 @@ class TaskDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildDetailItem(
               'Date:',
-              formattedDateTime(task.dateTime),
+              Helpers.formattedDateTime(task.dateTime),
               Colors.green[200]!,
             ),
           ],
@@ -45,10 +47,10 @@ class TaskDetailScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
+        SelectableText(label,
             style: TextStyle(color: Colors.greenAccent[700], fontSize: 17)),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(color: textColor, fontSize: 16)),
+        SelectableText(value, style: TextStyle(color: textColor, fontSize: 16)),
       ],
     );
   }
